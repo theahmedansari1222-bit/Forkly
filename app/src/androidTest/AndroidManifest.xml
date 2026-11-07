@@ -1,0 +1,19 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <permission android:name="com.forkly.app.fixture.READ_PLUGIN_DOCUMENTS" android:protectionLevel="signature" />
+    <application>
+        <provider
+            android:name="com.forkly.app.plugins.PluginImportFixtureProvider"
+            android:enabled="${localImportFixtureEnabled}"
+            android:authorities="com.forkly.app.pluginimport.fixture"
+            android:readPermission="com.forkly.app.fixture.READ_PLUGIN_DOCUMENTS"
+            android:exported="true"
+            android:grantUriPermissions="true" />
+        <!-- Read-only deterministic test data, present only in the instrumentation APK. -->
+        <provider
+            android:name="com.forkly.app.local.LocalImportFixtureProvider"
+            android:enabled="${localImportFixtureEnabled}"
+            android:authorities="com.forkly.app.localimport.fixture"
+            android:exported="true"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>
