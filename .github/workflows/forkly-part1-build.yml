@@ -35,19 +35,26 @@ jobs:
       - name: Check Android API 37 availability and install platform
         shell: bash
         run: |
-          set -euo pipefail
-          echo "Checking SDK repositories for Android API 37 (platforms;android-37)..."
-          if sdkmanager --list | grep -q 'platforms;android-37'; then
-            echo "Android API 37 is available. Installing platforms;android-37..."
-            sdkmanager --install "platforms;android-37"
+          set -uo pipefail
+          echo "Checking/installing Android API 37 (platforms;android-37) from configured SDK repositories..."
+          LIST="$(sdkmanager --list 2>&1 || true)"
+          if printf '%s\n' "$LIST" | grep -Eq '^[[:space:]]*platforms;android-37([[:space:]]|$|\|)'; then
+            echo "Android API 37 package is listed. Installing platforms;android-37..."
           else
+            echo "platforms;android-37 not found in listed packages; attempting install to confirm availability..."
+          fi
+          INSTALL_OUT="$(sdkmanager --install "platforms;android-37" 2>&1)"; INSTALL_RC=$?
+          printf '%s\n' "$INSTALL_OUT"
+          if [ $INSTALL_RC -ne 0 ] || printf '%s\n' "$INSTALL_OUT" | grep -q "Failed to find package 'platforms;android-37'"; then
             echo "::error::Android API 37 (platforms;android-37) is not available from the configured SDK repositories. Build stopped; compileSdk must remain 37 and no unofficial SDK/downgrade is used."
             exit 1
           fi
-          if sdkmanager --list | grep -q 'build-tools;37'; then
-            BT="$(sdkmanager --list | awk '/build-tools;37\.[0-9.]+/{print $1}' | sort -V | tail -n1)"
-            echo "Installing compatible build tools: ${BT}"
-            sdkmanager --install "${BT}"
+          if printf '%s\n' "$LIST" | grep -Eq '^[[:space:]]*build-tools;37(\.|[[:space:]]|$|\|)'; then
+            BT="$(printf '%s\n' "$LIST" | awk '/^[[:space:]]*build-tools;37\.[0-9.]+/{gsub(/^[[:space:]]+/, "", $1); print $1}' | sort -V | tail -n1)"
+            if [ -n "${BT:-}" ]; then
+              echo "Installing compatible build tools: ${BT}"
+              sdkmanager --install "${BT}"
+            fi
           else
             echo "No build-tools;37.x package listed; continuing (AGP/build setup may resolve compatible tools if available)."
           fi
