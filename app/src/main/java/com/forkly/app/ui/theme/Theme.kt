@@ -69,6 +69,7 @@ fun HarnessTheme(
 
     CompositionLocalProvider(
         LocalStatusColors provides (if (dark) StatusDark else StatusLight),
+        LocalForklyStatusColors provides (if (dark) ForklyStatusDark else ForklyStatusLight),
         LocalProgressBarStyle provides progressBarStyle,
     ) {
         MaterialTheme(
